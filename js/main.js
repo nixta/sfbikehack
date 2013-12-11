@@ -2,8 +2,15 @@ var cfTaskURL = "http://route.arcgis.com/arcgis/rest/services/World/ClosestFacil
 var webMapID = "b50be0a320bf42b7826f6758a7fcbc4f";
 var querySuffix = "/query?where=1%3D1&returnGeometry=true&outFields=OBJECTID&f=json";
 var layerSearchString = "Bike Parking in Garages near Theft Hotspots";
-var startSymbolImage = "http://geeknixta.com/arcgis/images/laframboise.jpg";
+var startSymbolImage = "http://localhost/arcgis/sfbikehack/resources/laframboise.png";
+var startSymbolWidth = 35,
+	startSymbolHeight = 50;
+//"https://raw.github.com/Esri/quickstart-map-js/master/images/blue-pin.png";
 var eventHandlerKey = "_doNotCalculateNearestGarages";
+
+var config = {
+	zoomToResults: false
+};
 
 var map;
 var searchLayer;
@@ -51,7 +58,7 @@ require(["esri/map",
 				}
 			}
 			
-			startSymbol = new PictureMarkerSymbol(startSymbolImage,65,80);
+			startSymbol = new PictureMarkerSymbol(startSymbolImage,startSymbolWidth,startSymbolHeight);
 
 			// Initialize the Closest Facility Task
 			cfTask = new ClosestFacilityTask(cfTaskURL);
@@ -71,6 +78,7 @@ require(["esri/map",
 
 			// Prepare a place to keep our map-click as the source
 			cfParams.incidents = new FeatureSet();
+			cfParams.returnIncidents = true;
 
 			// And set up the symbol we'll use to draw the routes to the markets
 			routeSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
@@ -89,12 +97,19 @@ require(["esri/map",
 				
 					// And run the task
 					cfTask.solve(cfParams, function(solveResult) {
-						// Zoom to the results
-						map.setExtent(esri.graphicsExtent(solveResult.routes).expand(1.1), true);
+						if (config.zoomToResults) {
+							// Zoom to the results
+							map.setExtent(esri.graphicsExtent(solveResult.routes).expand(1.1), true);
+						}
 						// Draw the results
+						map.graphics.clear();
 						for (i=0; i < solveResult.routes.length; i++) {
 							solveResult.routes[i].symbol = routeSymbol;
 							map.graphics.add(solveResult.routes[i]);
+						}
+						
+						for (i=0; i < solveResult.incidents.length; i++) {
+							map.graphics.add(new esri.Graphic(solveResult.incidents[i].geometry, startSymbol));						
 						}
 					}, function(error) {
 						console.log("Couldn't get closest garage! " + error);
