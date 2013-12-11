@@ -3,6 +3,7 @@ var webMapID = "b50be0a320bf42b7826f6758a7fcbc4f";
 var querySuffix = "/query?where=1%3D1&returnGeometry=true&outFields=OBJECTID&f=json";
 var layerSearchString = "Bike Parking in Garages near Theft Hotspots";
 var startSymbolImage = "http://geeknixta.com/arcgis/images/laframboise.jpg";
+var eventHandlerKey = "_doNotCalculateNearestGarages";
 
 var map;
 var searchLayer;
@@ -40,6 +41,12 @@ require(["esri/map",
 				if (map.graphicsLayerIds[i].lastIndexOf(layerSearchString,0) === 0)
 				{
 					searchLayer = map.getLayer(map.graphicsLayerIds[i]);
+					searchLayer.on("click", function(evt) {
+						// If a graphic is clicked, don't let the map get the click.
+						require(["dojo/_base/event"], function(event) {
+							evt[eventHandlerKey] = true;
+						});
+					});
 					break;
 				}
 			}
@@ -73,24 +80,26 @@ require(["esri/map",
 			// Set up the click handler.
 			map.on("click", function(evt) 
 			{
-				map.graphics.clear();
-				// Set up the start point for our search, an "Incident"
-				var g = new esri.Graphic(evt.mapPoint, startSymbol);
-				map.graphics.add(g);
-				cfParams.incidents.features = [g];
+				if (!evt.hasOwnProperty(eventHandlerKey)) {
+					map.graphics.clear();
+					// Set up the start point for our search, an "Incident"
+					var g = new esri.Graphic(evt.mapPoint, startSymbol);
+					map.graphics.add(g);
+					cfParams.incidents.features = [g];
 				
-				// And run the task
-				cfTask.solve(cfParams, function(solveResult) {
-					// Zoom to the results
-					map.setExtent(esri.graphicsExtent(solveResult.routes).expand(1.1), true);
-					// Draw the results
-					for (i=0; i < solveResult.routes.length; i++) {
-						solveResult.routes[i].symbol = routeSymbol;
-						map.graphics.add(solveResult.routes[i]);
-					}
-				}, function(error) {
-					console.log("Couldn't get closest garage! " + error);
-				});
+					// And run the task
+					cfTask.solve(cfParams, function(solveResult) {
+						// Zoom to the results
+						map.setExtent(esri.graphicsExtent(solveResult.routes).expand(1.1), true);
+						// Draw the results
+						for (i=0; i < solveResult.routes.length; i++) {
+							solveResult.routes[i].symbol = routeSymbol;
+							map.graphics.add(solveResult.routes[i]);
+						}
+					}, function(error) {
+						console.log("Couldn't get closest garage! " + error);
+					});
+				}
 			});
 		}, function(error) {
 			console.log("Map creation failed: ", dojo.toJson(error));
