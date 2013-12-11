@@ -2,7 +2,7 @@ var cfTaskURL = "http://route.arcgis.com/arcgis/rest/services/World/ClosestFacil
 var webMapID = "b50be0a320bf42b7826f6758a7fcbc4f";
 var querySuffix = "/query?where=1%3D1&returnGeometry=true&outFields=OBJECTID&f=json";
 var layerSearchString = "Bike Parking in Garages near Theft Hotspots";
-var startSymbolImage = "http://localhost/arcgis/sfbikehack/resources/laframboise.png";
+var startSymbolImage = "http://nixta.github.io/sfbikehack/resources/laframboise.png";
 var startSymbolWidth = 35,
 	startSymbolHeight = 50;
 //"https://raw.github.com/Esri/quickstart-map-js/master/images/blue-pin.png";
